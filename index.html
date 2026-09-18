@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>DZ LIFE — Algerian Life Simulator</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#090a0c"><meta name="mobile-web-app-capable" content="yes">
+<style>
+:root{--bg:#090a0c;--card:#13161a;--card2:#191d22;--text:#f4f5f6;--muted:#9ca3ad;--accent:#49d17d;--warn:#e8b84a;--danger:#e05a63}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#17201b 0,#090a0c 42%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
+button,input,select{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;background:var(--card2);color:var(--text);cursor:pointer}button:hover{filter:brightness(1.12)}button.primary{background:var(--accent);color:#06100a;font-weight:800}button.danger{background:#402126;color:#ffb5ba}
+.app{max-width:1050px;margin:auto;padding:14px}.top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}.brand{font-size:22px;font-weight:900;letter-spacing:.5px}.brand span{color:var(--accent)}.year{font-weight:800;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}.card{background:linear-gradient(145deg,rgba(25,29,34,.96),rgba(14,17,20,.96));border:1px solid #262b31;border-radius:18px;padding:15px;box-shadow:0 10px 30px #0004}.hero{grid-column:1/-1}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stat{background:#0e1114;border-radius:12px;padding:10px}.stat b{display:block;font-size:17px}.stat small{color:var(--muted)}.bar{height:6px;background:#272b31;border-radius:99px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--accent)}
+.tabs{display:flex;gap:7px;overflow:auto;margin:12px 0}.tabs button{white-space:nowrap}.tabs button.active{outline:1px solid var(--accent);background:#17251c}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.muted{color:var(--muted)}.money{font-weight:900}.event{font-size:19px;line-height:1.35;margin:10px 0}.choices{display:grid;gap:8px}.choice{text-align:left}.choice b{display:block}.choice small{display:block;color:var(--muted);margin-top:3px}
+.list{display:grid;gap:8px}.item{background:#0e1114;border:1px solid #252a30;border-radius:13px;padding:11px}.item .actions{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}.tag{display:inline-block;font-size:11px;padding:3px 7px;border-radius:99px;background:#242a30;color:#cbd1d8}.notice{padding:10px;border-radius:12px;background:#151a17;border-left:3px solid var(--accent);margin:8px 0}.dangerText{color:#ff8991}.good{color:#72e39b}.warn{color:#f1ca65}
+.timeline{max-height:330px;overflow:auto}.timeline div{padding:8px 0;border-bottom:1px solid #22272d}.timeline b{color:var(--accent)}
+canvas{width:100%;height:170px;background:#0d1013;border-radius:12px}
+.overlay{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:18px;z-index:5}.modal{max-width:650px;width:100%;max-height:92vh;overflow:auto;background:#121519;border:1px solid #2a3037;border-radius:22px;padding:18px}.form{display:grid;gap:10px}.form label{font-size:13px;color:var(--muted)}.form input,.form select{width:100%;padding:12px;border-radius:11px;border:1px solid #30363d;background:#0c0f12;color:#fff}.avatarBox{width:120px;min-width:120px}.avatarSvg{width:100%;height:auto;display:block}.avatarGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.avatarChoice{padding:7px;background:#11151a;border:1px solid #282f36;text-align:center}.avatarChoice.selected{outline:2px solid var(--accent)}.avatarChoice span{display:block;font-size:11px;margin-top:4px}.customGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.customGrid label{font-size:12px;color:var(--muted)}.customGrid select{width:100%;margin-top:5px;padding:9px;border-radius:10px;border:1px solid #30363d;background:#0c0f12;color:#fff}.brandStrip{display:flex;gap:6px;overflow:auto;padding:2px 0 10px}.characterCard{overflow:hidden}@media(max-width:760px){.avatarGrid{grid-template-columns:repeat(2,1fr)}.customGrid{grid-template-columns:repeat(2,1fr)}.avatarBox{width:100px;min-width:100px}}.footer{color:#69717b;text-align:center;padding:18px;font-size:12px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.hero{grid-column:auto}.stats{grid-template-columns:repeat(2,1fr)}.top{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const WILAYAS={
+"Algiers":{cost:1.35,housing:1.55,jobs:1.35,trade:1.35},"Oran":{cost:1.18,housing:1.28,jobs:1.18,trade:1.3},
+"Constantine":{cost:1.02,housing:1.05,jobs:1.05,trade:1.0},"Annaba":{cost:1.04,housing:1.08,jobs:1.04,trade:1.08},
+"Sétif":{cost:1.00,housing:1.02,jobs:1.02,trade:1.08},"Batna":{cost:.94,housing:.9,jobs:.94,trade:.95},
+"Béjaïa":{cost:1.08,housing:1.18,jobs:1.02,trade:1.18},"Tlemcen":{cost:1.03,housing:1.06,jobs:1.0,trade:1.05},
+"Blida":{cost:1.18,housing:1.28,jobs:1.2,trade:1.15},"Skikda":{cost:1.01,housing:1.02,jobs:.98,trade:1.08},
+"Ouargla":{cost:1.05,housing:1.0,jobs:1.12,trade:1.2},"Ghardaïa":{cost:1.02,housing:.96,jobs:1.02,trade:1.18}};
+const CAREERS=[
+["Teacher",65000,2,18],["Administrator",58000,2,18],["Engineer",105000,3,22],["Healthcare worker",85000,3,21],
+["Technician",65000,2,18],["Government employee",60000,2,18],["Sales",52000,1,18],["Construction",70000,1,18],
+["Restaurant worker",50000,1,18],["Retail",48000,1,18],["IT specialist",100000,3,20],["Marketing",72000,2,20],
+["Tourism",62000,2,18],["Transport",65000,1,18],["Freelancer",75000,2,18],["Manufacturing",68000,1,18],["Agriculture",56000,1,18]];
+const BUSINESSES=[["Café",1200000,180000,0.12],["Restaurant",2500000,300000,.15],["Grocery store",1800000,260000,.12],["Clothing store",2200000,250000,.13],["Phone shop",2000000,240000,.12],["Repair shop",900000,160000,.12],["Construction company",4000000,500000,.18],["Delivery company",1800000,280000,.14],["Transport company",5000000,600000,.16],["Software company",2500000,300000,.2],["E-commerce company",1500000,220000,.18],["Agricultural company",3500000,380000,.15],["Tourism company",4000000,450000,.17],["Manufacturing company",8000000,800000,.16]];
+const CLOTHES=[
+  ["DZAIR SPORT Basic Tee",1800,1,"Budget","DZAIR SPORT"],
+  ["URBANE Essential Shirt",5200,2,"Mid-range","URBANE"],
+  ["STRIDE Street Tee",6200,2,"Mid-range","STRIDE"],
+  ["LACORA Classic Polo",9800,3,"Mid-range","LACORA"],
+  ["NORTHLINE Windbreaker",26000,4,"Premium","NORTHLINE"],
+  ["MONARCH Premium Jacket",52000,5,"Premium","MONARCH"],
+  ["VELORA Signature Coat",125000,7,"Luxury","VELORA"],
+  ["DZAIR SPORT Daily Sneakers",4200,1,"Budget","DZAIR SPORT"],
+  ["STRIDE Urban Sneakers",14500,3,"Mid-range","STRIDE"],
+  ["NORTHLINE Trail Sneakers",38000,5,"Premium","NORTHLINE"],
+  ["MONARCH Premium Sneakers",72000,6,"Premium","MONARCH"],
+  ["VELORA Luxury Sneakers",145000,7,"Luxury","VELORA"],
+  ["URBANE Formal Shoes",12500,3,"Mid-range","URBANE"],
+  ["MONARCH Leather Shoes",56000,5,"Premium","MONARCH"],
+  ["LACORA Classic Watch",18000,3,"Mid-range","LACORA"],
+  ["MONARCH Chronograph",85000,5,"Premium","MONARCH"],
+  ["VELORA Elite Watch",520000,8,"Luxury","VELORA"],
+  ["STRIDE Tracksuit",15000,3,"Mid-range","STRIDE"],
+  ["DZAIR SPORT Cap",2500,1,"Budget","DZAIR SPORT"],
+  ["LACORA Premium Cap",8500,3,"Mid-range","LACORA"]
+];
+const CARS=[["Used compact hatchback",850000,35,.09,1,"Budget"],["Used family sedan",1700000,55,.11,2,"Budget"],["New compact",3200000,75,.10,3,"Mid-range"],["Mainstream SUV",5200000,95,.12,4,"Mid-range"],["Premium sedan",9500000,150,.14,6,"Premium"],["Luxury SUV",22000000,260,.18,8,"Luxury"],["High-end sports car",35000000,380,.22,9,"Luxury"]];
+const BIKES=[["Basic scooter",280000,10,.05,1],["City scooter",520000,14,.055,2],["Small motorcycle",850000,20,.07,3],["Sport motorcycle",2200000,35,.11,5],["Touring motorcycle",3200000,42,.10,6],["Premium motorcycle",5500000,60,.13,8]];
+const HOMES=[["Studio",2500000,22000,1],["F2 apartment",4200000,30000,2],["F3 apartment",6500000,42000,3],["F4 apartment",9000000,55000,4],["F5 apartment",12500000,70000,5],["Large apartment",18000000,95000,6],["Villa",30000000,140000,7],["Luxury villa",70000000,300000,10],["Farm/rural property",22000000,85000,6],["Commercial property",45000000,180000,8]];
+
+const FACE_PRESETS=[
+  {id:"atlas",name:"Atlas",skin:"#c58b68",hair:"#171311",hairStyle:"short",eyes:"brown",face:"oval",beard:"none"},
+  {id:"coastal",name:"Coastal",skin:"#b97855",hair:"#211915",hairStyle:"wavy",eyes:"brown",face:"round",beard:"light"},
+  {id:"highlands",name:"Highlands",skin:"#9f684c",hair:"#161616",hairStyle:"crew",eyes:"dark",face:"angular",beard:"short"},
+  {id:"sahara",name:"Sahara",skin:"#d19b72",hair:"#2a1b16",hairStyle:"curly",eyes:"brown",face:"oval",beard:"none"},
+  {id:"mediterranean",name:"Mediterranean",skin:"#e0ad82",hair:"#241714",hairStyle:"medium",eyes:"hazel",face:"soft",beard:"light"},
+  {id:"aurès",name:"Aurès",skin:"#a96f51",hair:"#121212",hairStyle:"crew",eyes:"dark",face:"angular",beard:"full"}
+];
+const FACE_SKINS=[
+  ["light","#e0ad82"],["olive","#c58b68"],["warm","#b97855"],["deep","#9f684c"]
+];
+const HAIR_STYLES=["short","crew","wavy","curly","medium"];
+const EYE_COLORS=["brown","dark","hazel","green"];
+const BEARD_STYLES=["none","light","short","full"];
+
+const FASHION_BRANDS=[
+  ["DZAIR SPORT","DZ Sport",1.0],
+  ["LACORA","Premium Polo",1.18],
+  ["NORTHLINE","Outdoor",1.22],
+  ["STRIDE","Streetwear",1.08],
+  ["URBANE","Casual",1.0],
+  ["MONARCH","Premium",1.45],
+  ["VELORA","Luxury",2.2]
+];
+
+function facePreview(face, gender){
+  const skin=face?.skin||"#c58b68", hair=face?.hair||"#171311";
+  const eye=face?.eyes||"brown", beard=face?.beard||"none";
+  const hairStyle=face?.hairStyle||"short";
+  const eyeColor={brown:"#4a2d20",dark:"#171717",hazel:"#7b5a35",green:"#496b4b"}[eye]||"#4a2d20";
+  const beardFill=beard==="none"?"transparent":"#211713";
+  const hairPath={
+    short:"M27 43 Q30 17 50 16 Q70 17 73 43 Q67 31 50 31 Q33 31 27 43",
+    crew:"M29 40 Q31 19 50 18 Q69 19 71 40 L65 34 Q50 29 35 34Z",
+    wavy:"M26 45 Q25 16 50 14 Q76 17 74 46 Q68 34 61 31 Q52 38 45 30 Q37 38 26 45",
+    curly:"M25 44 Q22 18 34 17 Q39 9 47 15 Q56 7 63 16 Q75 15 75 44 Q66 30 50 31 Q34 30 25 44",
+    medium:"M25 47 Q24 15 50 14 Q76 15 75 47 Q68 38 64 29 L35 29 Q31 39 25 47"
+  }[hairStyle] || "M27 43 Q30 17 50 16 Q70 17 73 43 Q67 31 50 31 Q33 31 27 43";
+  return `<svg class="avatarSvg" viewBox="0 0 100 120" aria-label="character preview">
+    <rect x="0" y="0" width="100" height="120" rx="20" fill="#0d1013"/>
+    <path d="M24 118 Q27 88 50 84 Q73 88 76 118" fill="#20252b"/>
+    <ellipse cx="50" cy="61" rx="27" ry="33" fill="${skin}"/>
+    <path d="${hairPath}" fill="${hair}"/>
+    <ellipse cx="39" cy="60" rx="4" ry="3" fill="${eyeColor}"/>
+    <ellipse cx="61" cy="60" rx="4" ry="3" fill="${eyeColor}"/>
+    <path d="M50 62 L47 72 L52 72" fill="none" stroke="#704737" stroke-width="2" stroke-linecap="round"/>
+    <path d="M42 79 Q50 84 58 79" fill="none" stroke="#713f39" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M37 74 Q50 92 63 74 Q61 91 50 93 Q39 91 37 74" fill="${beardFill}" opacity="${beard==="none"?0:.78}"/>
+    ${gender==="Female"?`<path d="M25 49 Q17 72 27 96" fill="none" stroke="${hair}" stroke-width="10" stroke-linecap="round"/><path d="M75 49 Q83 72 73 96" fill="none" stroke="${hair}" stroke-width="10" stroke-linecap="round"/>`:""}
+  </svg>`;
+}
+function getFace(){
+  const f=S?.appearance||{};
+  return {preset:f.preset||"atlas",skin:f.skin||FACE_PRESETS[0].skin,hair:f.hair||FACE_PRESETS[0].hair,hairStyle:f.hairStyle||"short",eyes:f.eyes||"brown",beard:f.beard||"none"};
+}
+function applyAppearance(k,v){
+  if(!S) return;
+  S.appearance=S.appearance||getFace();
+  S.appearance[k]=v;
+  save(); render();
+}
+function choosePreset(id){
+  const p=FACE_PRESETS.find(x=>x.id===id)||FACE_PRESETS[0];
+  S.appearance={preset:p.id,skin:p.skin,hair:p.hair,hairStyle:p.hairStyle,eyes:p.eyes,beard:p.beard};
+  save(); render();
+}
+function renderCharacterCard(){
+  const f=getFace();
+  const preset=FACE_PRESETS.find(x=>x.id===f.preset)||FACE_PRESETS[0];
+  return `<div class="card characterCard"><div class="row"><div><h2>Character</h2><p class="muted">Your appearance can be customized and changed later.</p></div><div class="avatarBox">${facePreview(f,S.gender)}</div></div>
+  <div class="item"><b>Face presets inspired by Algerian diversity</b><p class="muted">Stylized fictional faces; they do not represent any specific real person.</p>
+  <div class="avatarGrid">${FACE_PRESETS.map(p=>`<button class="avatarChoice ${f.preset===p.id?'selected':''}" onclick="choosePreset('${p.id}')">${facePreview(p,S.gender)}<span>${p.name}</span></button>`).join("")}</div></div>
+  <div class="customGrid">
+    <label>Skin tone<select onchange="applyAppearance('skin',this.value)">${FACE_SKINS.map(x=>`<option value="${x[1]}" ${f.skin===x[1]?"selected":""}>${x[0]}</option>`).join("")}</select></label>
+    <label>Hair style<select onchange="applyAppearance('hairStyle',this.value)">${HAIR_STYLES.map(x=>`<option ${f.hairStyle===x?"selected":""}>${x}</option>`).join("")}</select></label>
+    <label>Eye color<select onchange="applyAppearance('eyes',this.value)">${EYE_COLORS.map(x=>`<option ${f.eyes===x?"selected":""}>${x}</option>`).join("")}</select></label>
+    ${S.gender==="Male"?`<label>Beard<select onchange="applyAppearance('beard',this.value)">${BEARD_STYLES.map(x=>`<option ${f.beard===x?"selected":""}>${x}</option>`).join("")}</select></label>`:""}
+  </div></div></div>`;
+}
+
+const COINS={
+BTC:{p:100000,vol:.18,ad:.90,name:"Bitcoin"},
+ETH:{p:4000,vol:.22,ad:.88,name:"Ethereum"},
+USDT:{p:1,vol:.015,ad:.96,name:"Tether USD"},
+BNB:{p:900,vol:.20,ad:.82,name:"BNB"},
+SOL:{p:220,vol:.30,ad:.78,name:"Solana"},
+TON:{p:3.2,vol:.35,ad:.65,name:"Toncoin"},
+XRP:{p:2.8,vol:.28,ad:.72,name:"XRP"},
+DOGE:{p:.25,vol:.38,ad:.60,name:"Dogecoin"}
+};
+
+let S=null, tab="life", chart=[];
+let SETTINGS=JSON.parse(localStorage.getItem("dzlife_settings")||'{"sound":true,"language":"en"}');
+let audioCtx=null;
+function clickSound(){
+ if(!SETTINGS.sound)return;
+ try{
+  audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.frequency.value=520; o.type="sine"; g.gain.setValueAtTime(.035,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.055);
+  o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+.055);
+ }catch(e){}
+}
+document.addEventListener("click",e=>{if(e.target.closest("button"))clickSound()});
+const LANG={
+ en:{life:"Life",career:"Career",business:"Business",shop:"Shop",property:"Property",crypto:"Crypto",economy:"Economy",timeline:"Timeline",settings:"Settings",save:"Save",new:"New",live:"LIVE ONE YEAR →"},
+ fr:{life:"Vie",career:"Carrière",business:"Entreprise",shop:"Boutique",property:"Immobilier",crypto:"Crypto",economy:"Économie",timeline:"Chronologie",settings:"Paramètres",save:"Sauver",new:"Nouveau",live:"VIVRE UNE ANNÉE →"},
+ ar:{life:"الحياة",career:"المهنة",business:"الأعمال",shop:"التسوق",property:"العقارات",crypto:"العملات",economy:"الاقتصاد",timeline:"المسار الزمني",settings:"الإعدادات",save:"حفظ",new:"جديد",live:"عِش سنة →"}
+};
+function t(k){return (LANG[SETTINGS.language]||LANG.en)[k]||k}
+function setSetting(k,v){SETTINGS[k]=v;localStorage.setItem("dzlife_settings",JSON.stringify(SETTINGS));render()}
+function money(x){return Math.round(x).toLocaleString("fr-DZ")+" DZD"}
+function clamp(x,a=0,b=100){return Math.max(a,Math.min(b,x))}
+function rand(a,b){return a+Math.random()*(b-a)}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function save(){if(S)localStorage.setItem("dzlife",JSON.stringify(S))}
+function load(){try{S=JSON.parse(localStorage.getItem("dzlife"))}catch(e){S=null}}
+function log(t){S.timeline.unshift({y:S.year,t});S.timeline=S.timeline.slice(0,180)}
+function start(data){
+ S={name:data.name||"Ahmed",gender:data.gender,wilaya:data.wilaya,birth:data.birth,year:Number(data.birth),age:0,health:rand(70,95),happy:75,edu:0,intel:rand(45,80),discipline:rand(40,80),ambition:rand(40,90),rep:50,stress:15,social:rand(40,80),exp:0,cash:0,bank:0,debt:0,job:null,jobLevel:0,school:"Family",parentsJob:data.parentsJob,familyWealth:Number(data.familyWealth),housing:["Living with parents",0,0],vehicle:null,inventory:[],properties:[],businesses:[],appearance:(()=>{const p=FACE_PRESETS.find(x=>x.id===data.facePreset)||FACE_PRESETS[0];return {preset:p.id,skin:p.skin,hair:p.hair,hairStyle:p.hairStyle,eyes:p.eyes,beard:p.beard}})(),relationships:{parents:70,siblings:60,partner:0,children:0,friends:55},military:"Not eligible",investments:{savings:0,realestate:0,stocks:0,crypto:{}},crypto:Object.fromEntries(Object.keys(COINS).map(k=>[k,0])),timeline:[],event:null,dead:false,notice:""};
+ S.cash=S.familyWealth>3000000?rand(50000,150000):rand(0,30000);S.bank=S.familyWealth*.05;log("Born in "+S.wilaya+"."); nextYear(true);render();save();
+}
+function econ(){let base=S.econ||{infl:4.5,unemp:11,growth:2.8,salary:70000,housing:1,food:1,fuel:1,confidence:60};
+ let shock=rand(-1.2,1.2);base.growth=clamp(base.growth+shock,-6,8);base.infl=clamp(base.infl+rand(-.7,.9)+(base.growth<0?1:0),1,15);base.unemp=clamp(base.unemp+rand(-.7,.7)+(base.growth<0?1.2:-.4),4,25);base.salary*=1+base.infl/100*.35;base.housing*=1+rand(-.03,.08)+base.infl/250;base.food*=1+base.infl/100;base.fuel*=1+rand(-.02,.08);base.confidence=clamp(base.confidence+(base.growth*2)-base.infl*.4,10,95);S.econ=base;chart.push({y:S.year,i:base.infl,g:base.growth,u:base.unemp});chart=chart.slice(-20)}
+function yearlyFinance(){
+ let w=WILAYAS[S.wilaya], e=S.econ, cost=e.food*w.cost;
+ let income=0;if(S.job)income=S.job[1]*(1+S.jobLevel*.12)*(w.jobs)* (1+S.exp*.025); 
+ S.cash+=income;
+ let expenses= S.age<6?9000: S.age<18?18000:42000;
+ if(S.housing[0]!=="Living with parents")expenses+=S.housing[2];
+ expenses*=cost/1.04;
+ if(S.vehicle)expenses+=S.vehicle[2]*900;
+ if(S.businesses.length)S.businesses.forEach(b=>{b.rev*=1+(e.growth/100)*.4+rand(-.04,.05);b.rev=Math.max(0,b.rev);b.exp=b.baseExp*(1+e.infl/100*.45);S.cash+=b.rev-b.exp-b.debtPay});
+ S.cash-=expenses; S.cash-=S.debt*.025;
+ if(S.cash<0){S.debt+=-S.cash;S.cash=0}
+ S.bank*=1.002;
+ S.investments.stocks*=1+rand(-.12,.15);
+ Object.keys(COINS).forEach(k=>{let c=S.crypto[k]||0; if(c){let v=S.coinPrice[k];S.investments.crypto=(S.investments.crypto||0)+0;c.v=v}})
+ S.exp+=S.job?1:0;
+ return income-expenses;
+}
+function coinTick(){S.coinPrice={...(S.coinPrice||{})};Object.keys(COINS).forEach(k=>{let c=COINS[k];let p=S.coinPrice[k]||c.p;p*=Math.exp(rand(-c.vol,c.vol)*.35+(S.econ.growth/100)*.03);S.coinPrice[k]=Math.max(.05,p)})}
+function netWorth(){let props=S.properties.reduce((a,p)=>a+p.value,0), veh=S.vehicle?S.vehicle[1]:0, inv=S.inventory.reduce((a,i)=>a+i[1],0), crypto=Object.keys(COINS).reduce((a,k)=>a+(S.crypto[k]||0)*(S.coinPrice?.[k]||COINS[k].p),0);return S.cash+S.bank+props+veh+inv+S.investments.stocks+crypto-S.debt}
+function schoolTick(){
+ if(S.age<=5){S.school="Early childhood";S.edu+=rand(1,3)}
+ else if(S.age<=11){S.school="Primary school";S.edu+=S.intel/35+S.discipline/45;S.happy+=rand(-2,3)}
+ else if(S.age<=14){S.school="Middle school";S.edu+=S.intel/40+S.discipline/50}
+ else if(S.age<=17){S.school="Secondary school";S.edu+=S.intel/38+S.discipline/45}
+}
+function makeEvent(){
+ const a=S.age,e=S.econ;
+ if(a===6)return ["Primary school enrollment",["Focus on studies","Sports and hobbies","Make many friends"],["Education +5, stress +2","Health +3, education +2","Social +5, education +1"]];
+ if(a===15)return ["Choose your secondary-school direction",["Academic focus","Practical/vocational interests","Balance studies and activities"],["Education +6, stress +4","Education +3, practical experience +3","Education +4, happiness +2"]];
+ if(a===18&&!S.job)return ["You have reached adulthood and must choose a direction.",["University","Vocational training","Search for employment","Start a small business"],["Education +8","Education +5, experience +2","Experience +2, cash +10000","Business opportunity appears"]];
+ if(a===19&&!S.militaryDone)return ["A national-service administrative step appears in your life.",["Complete the process normally","Receive a deferral for an eligible reason","Medical examination outcome: exemption","Serve and complete military service"],["Status updated","Status: deferred","Status: exempt","Status: completed"]];
+ if(a>=18&&a%7===0&&S.debt>500000)return ["Debt has become significant relative to your finances.",["Cut spending","Seek additional work","Take another loan to expand"],["Debt -15%","Cash +50000, stress +5","Debt +20%, possible income +10%"]];
+ if(S.businesses.length&&S.businesses.some(b=>b.rev<b.exp)){
+   return ["Your business is under pressure as costs rise.",["Raise prices","Reduce staff/costs","Change suppliers","Close the business"],["Revenue +8%, demand -3","Expenses -12%, reputation -2","Expenses -7%, stability +3","Business closed"]]
+ }
+ if(e.growth<0)return ["Economic downturn: household and business conditions are tightening.",["Reduce spending","Keep your normal lifestyle","Invest cautiously"],["Cash +10000","Happiness +2","Stocks +5%"]];
+ if(e.infl>8)return ["Inflation is putting pressure on everyday purchasing power.",["Cut discretionary spending","Ask for a salary review","Use savings"],["Expenses -10%","Job income +8% if employed","Bank -30000, happiness +2"]];
+ if(a>=22&&S.relationships.partner===0&&Math.random()<.18)return ["You meet someone with whom you may build a relationship.",["Start dating","Stay friends","Do not pursue it"],["Relationship +25","Friends +8","Nothing changes"]];
+ if(a>=25&&S.relationships.partner>=70&&Math.random()<.12)return ["Your relationship is becoming serious.",["Get married","Continue dating","End the relationship"],["Married","Partner +3","Partner -35"]];
+ if(a>=26&&S.relationships.partner>=80&&Math.random()<.12)return ["A child may join your family.",["Have a child","Wait","Do not have a child"],["Children +1, expenses rise","Nothing","Nothing"]];
+ if(a>=20&&a%5===0&&Math.random()<.3)return ["A career opportunity is available.",["Apply for a better role","Stay in your current role","Change sector"],["Promotion","Satisfaction +2","Experience reset +2"]];
+ return pick([
+  ["Family event: your household needs your attention.",["Help financially","Offer emotional support","Stay focused on work"],["Cash -20000, parents +8","Parents +12, happiness +2","Stress +3"]],
+  ["A friend proposes a weekend activity.",["Go","Decline to save money","Invite more friends"],["Happiness +5, cash -5000","Bank +5000","Social +7, cash -8000"]],
+  ["Your health needs attention.",["Prioritize rest","Ignore it","Spend on a check-up"],["Health +5","Health -4, stress +3","Health +8, cash -10000"]]
+ ]);
+}
+function applyChoice(idx){
+ let ev=S.event;if(!ev)return;
+ const effects=ev[2][idx]||"";
+ if(effects.includes("Education"))S.edu+=Number((effects.match(/Education ([+-]\d+)/)||[,0])[1]);
+ if(effects.includes("Health"))S.health+=Number((effects.match(/Health ([+-]\d+)/)||[,0])[1]);
+ if(effects.includes("stress"))S.stress+=Number((effects.match(/stress ([+-]?\d+)/i)||[,0])[1]);
+ if(effects.includes("happiness")||effects.includes("Happiness"))S.happy+=Number((effects.match(/happiness ([+-]?\d+)/i)||effects.match(/Happiness ([+-]?\d+)/)||[,0])[1]);
+ if(effects.includes("Social"))S.social+=Number((effects.match(/Social ([+-]\d+)/)||[,0])[1]);
+ if(effects.includes("parents"))S.relationships.parents+=Number((effects.match(/parents ([+-]\d+)/)||[,0])[1]);
+ if(effects.includes("cash"))S.cash+=Number((effects.match(/cash ([+-]?\d+)/)||[,0])[1]);
+ if(effects.includes("Bank"))S.bank+=Number((effects.match(/Bank ([+-]?\d+)/)||[,0])[1]);
+ if(effects.includes("Debt"))S.debt*=1+Number((effects.match(/Debt ([+-]?\d+)%/)||[,0])[1])/100;
+ if(effects.includes("Partner"))S.relationships.partner=clamp(S.relationships.partner+Number((effects.match(/Partner ([+-]\d+)/)||[,0])[1]));
+ if(effects.includes("Relationship"))S.relationships.partner=clamp(S.relationships.partner+Number((effects.match(/Relationship ([+-]\d+)/)||[,0])[1]));
+ if(effects.includes("Children"))S.relationships.children+=1;
+ if(effects.includes("practical experience"))S.exp+=3;
+ if(effects.includes("experience"))S.exp+=2;
+ if(effects.includes("Status:"))S.military=effects.replace("Status: ","");
+ if(effects==="Married")S.married=true;
+ if(effects==="Promotion"&&S.job)S.jobLevel++;
+ if(effects.includes("Revenue"))S.businesses.forEach(b=>b.rev*=1.08);
+ if(effects.includes("Expenses"))S.businesses.forEach(b=>b.baseExp*=.88);
+ if(effects.includes("Business closed"))S.businesses.pop();
+ if(effects.includes("Stocks"))S.investments.stocks*=1.05;
+ if(effects.includes("salary")&&S.job)S.job[1]*=1.08;
+ log(ev[0]+" — "+ev[1][idx]);S.event=null;render();save();
+}
+function nextYear(first=false){
+ if(S.dead)return;
+ if(!first)S.year++;
+ S.age=S.year-Number(S.birth);
+ econ();coinTick();schoolTick();
+ if(S.age===18&&!S.job&&S.school!=="University")S.notice="Adult pathways are now available.";
+ yearlyFinance();
+ S.health=clamp(S.health+rand(-2,1)-S.stress*.01);S.happy=clamp(S.happy+rand(-3,2)-S.stress*.03);S.rep=clamp(S.rep+rand(-1,1));S.stress=clamp(S.stress+rand(-2,2));S.edu=clamp(S.edu,0,100);S.health=clamp(S.health);
+ if(S.age>=18&&S.age%3===0&&!S.job&&Math.random()<.45)S.event=["Employment opportunity",["Apply for a public/private role","Continue studying","Freelance"],["Job available","Education +4","Cash +30000, experience +2"]];
+ if(!S.event)S.event=makeEvent();
+ if(S.age>=65)S.job=null;
+ let deathRisk=S.age>70?.008+(S.age-70)*.002:0;
+ if(Math.random()<deathRisk){S.dead=true;log("Died at age "+S.age+".");S.event=null}
+ save();render();
+}
+function buyCloth(i){let x=CLOTHES[i];if(S.cash>=x[1]){S.cash-=x[1];S.inventory.push(x);S.happy=clamp(S.happy+1);S.rep=clamp(S.rep+x[2]);notice("Purchased "+x[0]);render();save()}}
+function buyCar(i){let x=CARS[i];if(S.cash>=x[1]){S.cash-=x[1];S.vehicle=x;notice("Purchased "+x[0]);render();save()}}
+function buyBike(i){let x=BIKES[i];if(S.cash>=x[1]){S.cash-=x[1];S.vehicle=[x[0],x[1],x[2],x[3],x[4]];notice("Purchased "+x[0]);render();save()}}
+function buyHome(i){let x=HOMES[i],p=x[1]*WILAYAS[S.wilaya].housing*S.econ.housing;if(S.cash>=p){S.cash-=p;S.properties.push({name:x[0],value:p,rent:x[2]*WILAYAS[S.wilaya].housing});S.housing=[x[0],p,x[2]*WILAYAS[S.wilaya].housing];notice("Purchased "+x[0]);render();save()}}
+function createBiz(i){let x=BUSINESSES[i];if(S.cash>=x[1]){S.cash-=x[1];S.businesses.push({name:x[0],rev:x[2]*.9,baseExp:x[2],debtPay:0,industry:x[0]});notice("Started "+x[0]);render();save()}}
+function getJob(i){let c=CAREERS[i];if(S.age>=c[3]&&S.edu>=c[2]*10){S.job=c;S.jobLevel=0;S.happy+=4;log("Started career: "+c[0]);render();save()}}
+function notice(t){S.notice=t;setTimeout(()=>{S.notice="";render()},2200)}
+function renderStats(){let vals=[["Health",S.health],["Happiness",S.happy],["Education",S.edu],["Reputation",S.rep],["Discipline",S.discipline],["Ambition",S.ambition],["Social",S.social],["Stress",S.stress]];return `<div class="stats">${vals.map(x=>`<div class="stat"><small>${x[0]}</small><b>${Math.round(x[1])}</b><div class="bar"><i style="width:${x[1]}%"></i></div></div>`).join("")}</div>`}
+function renderLife(){let ev=S.event;return `<div class="grid"><div class="card hero"><div class="row"><div><div class="muted">${S.year}</div><h1 style="margin:2px 0">AGE ${S.age}</h1><div>${S.name} · ${S.gender} · ${S.wilaya}</div></div><div style="text-align:right"><div class="money">${money(netWorth())}</div><small class="muted">Net worth</small></div></div>${renderStats()}<div class="notice">${S.notice||"Your life continues. Every decision changes future conditions."}</div></div>
+<div class="card"><h3>Current Life Event</h3>${S.dead?`<div class="event">Your life has ended at age ${S.age}.</div>`:ev?`<div class="event">${ev[0]}</div><div class="choices">${ev[1].map((c,i)=>`<button class="choice" onclick="applyChoice(${i})"><b>${String.fromCharCode(65+i)}. ${c}</b><small>${ev[2][i]}</small></button>`).join("")}</div>`:`<p class="muted">No event waiting.</p>`}</div>
+<div class="card"><h3>Finances</h3><p>Cash <b>${money(S.cash)}</b></p><p>Bank <b>${money(S.bank)}</b></p><p>Debt <b class="${S.debt?'dangerText':''}">${money(S.debt)}</b></p><p>Job: <b>${S.job?S.job[0]:"Unemployed"}</b></p><p>Education: <b>${S.school}</b></p><p>Housing: <b>${S.housing[0]}</b></p>${!S.dead?`<button class="primary" onclick="nextYear()">LIVE ONE YEAR →</button>`:""}</div></div>`${renderCharacterCard()}}
+function renderMarket(){
+ return `<div class="card"><h2>Shopping</h2><p class="muted">Fictional brands are used for the game. They are intentionally not the original trademarks, names or logos of real companies.</p>
+ <h3>Fashion</h3><div class="brandStrip">${FASHION_BRANDS.map(b=>`<span class="tag">${b[0]}</span>`).join("")}</div>
+ <div class="list">${CLOTHES.map((x,i)=>`<div class="item"><div class="row"><b>${x[0]}</b><span class="tag">${x[4]} · ${x[3]}</span></div><div>${money(x[1])} · quality ${x[2]}/8</div><div class="muted">Fictional brand inspired by a general fashion category; no original logo is used.</div><div class="actions"><button onclick="buyCloth(${i})">Buy</button></div></div>`).join("")}</div>
+ <h3>Cars</h3><div class="list">${CARS.map((x,i)=>`<div class="item"><div class="row"><b>${x[0]}</b><span class="tag">${x[5]}</span></div><div>${money(x[1])} · fuel ${x[3]}L/100km · maintenance ${money(x[2])}/yr</div><div class="actions"><button onclick="buyCar(${i})">Buy</button></div></div>`).join("")}</div>
+ <h3>Motorcycles & scooters</h3><div class="list">${BIKES.map((x,i)=>`<div class="item"><b>${x[0]}</b><div>${money(x[1])} · maintenance ${money(x[2])}/yr</div><div class="actions"><button onclick="buyBike(${i})">Buy</button></div></div>`).join("")}</div></div>`;
+}
+function renderProperty(){return `<div class="card"><h2>Real Estate</h2><p class="muted">Wilaya multiplier: ${WILAYAS[S.wilaya].housing.toFixed(2)}× · economy index ${S.econ.housing.toFixed(2)}×</p><div class="list">${HOMES.map((x,i)=>{let p=x[1]*WILAYAS[S.wilaya].housing*S.econ.housing;return `<div class="item"><div class="row"><b>${x[0]}</b><span class="tag">Level ${x[3]}</span></div><div>${money(p)} · estimated rent ${money(x[2]*WILAYAS[S.wilaya].housing)}/yr</div><div class="actions"><button onclick="buyHome(${i})">Buy</button></div></div>`}).join("")}</div><h3>Owned properties</h3><div class="list">${S.properties.length?S.properties.map(p=>`<div class="item"><b>${p.name}</b><div>Value ${money(p.value)} · rent potential ${money(p.rent)}/yr</div></div>`).join(""):"<span class='muted'>None yet.</span>"}</div></div>`}
+function renderCareer(){return `<div class="card"><h2>Careers</h2><p class="muted">Education requirement is represented by the education score; the labor market multiplier changes with Wilaya and economy.</p><div class="list">${CAREERS.map((c,i)=>`<div class="item"><div class="row"><b>${c[0]}</b><span class="tag">${c[3]}+</span></div><div>Base salary ${money(c[1])}/month · education ${c[2]*10} · exp ${c[2]}+</div><div class="actions"><button onclick="getJob(${i})">Apply</button></div></div>`).join("")}</div></div>`}
+function renderBusiness(){return `<div class="card"><h2>Businesses</h2><p class="muted">Business performance responds to growth, inflation, demand and operating costs.</p><div class="list">${BUSINESSES.map((x,i)=>`<div class="item"><div class="row"><b>${x[0]}</b><span>${money(x[1])} startup</span></div><div>Typical revenue ${money(x[2])}/yr · margin varies with economy</div><div class="actions"><button onclick="createBiz(${i})">Start business</button></div></div>`).join("")}</div><h3>Your companies</h3><div class="list">${S.businesses.length?S.businesses.map(b=>`<div class="item"><b>${b.name}</b><div>Revenue ${money(b.rev)} · expenses ${money(b.exp||b.baseExp)} · estimated profit ${money((b.rev-(b.exp||b.baseExp)))}</div></div>`).join(""):"<span class='muted'>No companies.</span>"}</div></div>`}
+function renderEconomy(){return `<div class="card"><h2>Algerian Economy Simulation</h2><div class="stats"><div class="stat"><small>Inflation</small><b>${S.econ.infl.toFixed(1)}%</b></div><div class="stat"><small>Unemployment</small><b>${S.econ.unemp.toFixed(1)}%</b></div><div class="stat"><small>Growth</small><b>${S.econ.growth.toFixed(1)}%</b></div><div class="stat"><small>Confidence</small><b>${S.econ.confidence.toFixed(0)}</b></div></div><p>Housing index: <b>${S.econ.housing.toFixed(2)}</b> · Food index: <b>${S.econ.food.toFixed(2)}</b> · Fuel index: <b>${S.econ.fuel.toFixed(2)}</b></p><canvas id="chart" width="900" height="300"></canvas><p class="muted">The simulation is fictionalized and does not represent official forecasts or real market prices.</p></div>`}
+function renderCrypto(){return `<div class="card"><h2>Fictional Crypto Market</h2><p class="muted">Real-world cryptocurrencies are used as game assets. Prices in the simulator are game values unless a live market feed is connected.</p><div class="list">${Object.keys(COINS).map(k=>{let p=S.coinPrice[k]||COINS[k].p,q=S.crypto[k]||0;return `<div class="item"><div class="row"><b>${COINS[k].name} (${k})</b><span>${p.toLocaleString("en-US",{maximumFractionDigits:2})} DZD/unit</span></div><div>Volatility ${(COINS[k].vol*100).toFixed(0)}% · adoption ${(COINS[k].ad*100).toFixed(0)}%</div><div class="actions"><button onclick="cryptoBuy('${k}')">Buy 1</button><button onclick="cryptoSell('${k}')">Sell 1</button><span class="tag">Owned ${q.toFixed(2)}</span></div></div>`}).join("")}</div></div>`}
+function cryptoBuy(k){let p=S.coinPrice[k];if(S.cash>=p){S.cash-=p;S.crypto[k]++;render();save()}}
+function cryptoSell(k){if(S.crypto[k]>0){S.crypto[k]--;S.cash+=S.coinPrice[k];render();save()}}
+function renderSettings(){
+ return `<div class="card"><h2>⚙ ${t("settings")}</h2>
+ <div class="item"><div class="row"><b>🔊 Sound effects</b><button onclick="setSetting('sound',!SETTINGS.sound)">${SETTINGS.sound?"ON":"OFF"}</button></div><p class="muted">Button/click sound effects.</p></div>
+ <div class="item"><div class="row"><b>🌐 Language</b><select onchange="setSetting('language',this.value)"><option value="en" ${SETTINGS.language==="en"?"selected":""}>English</option><option value="fr" ${SETTINGS.language==="fr"?"selected":""}>Français</option><option value="ar" ${SETTINGS.language==="ar"?"selected":""}>العربية</option></select></div><p class="muted">UI language can be changed at any time.</p></div>
+ <div class="item"><b>🎮 Game settings</b><p class="muted">Settings are stored locally on this device. Game saves remain separate from these preferences.</p></div>
+ </div>`;
+}
+function renderTimeline(){return `<div class="card"><h2>Life Timeline</h2><div class="timeline">${S.timeline.map(x=>`<div><b>${x.y}</b> — ${x.t}</div>`).join("")}</div></div>`}
+function render(){if(!S){renderStart();return}document.documentElement.dir=SETTINGS.language==="ar"?"rtl":"ltr";
+document.documentElement.lang=SETTINGS.language;
+document.getElementById("app").innerHTML=`<div class="app"><div class="top"><div class="brand">DZ <span>LIFE</span></div><div class="year">${S.year} · ${S.wilaya}</div><div><button onclick="manualSave()">${t("save")}</button> <button onclick="newGame()">${t("new")}</button> <button onclick="tab='settings';render()">⚙</button></div></div><div class="tabs">${["life","career","business","shop","property","crypto","economy","timeline","settings"].map(t=>`<button class="${tab===t?'active':''}" onclick="tab='${t}';render()">${LANG[SETTINGS.language]?.[t]||t[0].toUpperCase()+t.slice(1)}</button>`).join("")}</div>${tab==="life"?renderLife():tab==="career"?renderCareer():tab==="business"?renderBusiness():tab==="shop"?renderMarket():tab==="property"?renderProperty():tab==="crypto"?renderCrypto():tab==="economy"?renderEconomy():tab==="settings"?renderSettings():renderTimeline()}<div class="footer">DZ LIFE — fictional simulation. Built as a lightweight mobile MVP.</div></div>`;if(tab==="economy")drawChart()}
+function drawChart(){let c=document.getElementById("chart"),ctx=c?.getContext("2d");if(!ctx)return;ctx.clearRect(0,0,c.width,c.height);let arr=chart;if(arr.length<2)return;let max=Math.max(...arr.map(x=>x.i),10),min=0;ctx.strokeStyle="#49d17d";ctx.lineWidth=4;ctx.beginPath();arr.forEach((x,i)=>{let px=i*(c.width-40)/(arr.length-1)+20,py=c.height-25-(x.i-min)/(max-min)*(c.height-50);i?ctx.lineTo(px,py):ctx.moveTo(px,py)});ctx.stroke();ctx.fillStyle="#9ca3ad";ctx.font="18px system-ui";ctx.fillText("Inflation history",20,25)}
+function renderStart(){document.getElementById("app").innerHTML=`<div class="overlay"><div class="modal"><div class="brand">DZ <span>LIFE</span></div><h1>Algerian Life Simulator</h1><p class="muted">Start at birth and live one year at a time. Education, money, family, work, businesses, housing, vehicles, investments and the economy influence the future.</p><form class="form" onsubmit="event.preventDefault();start({name:name.value,gender:gender.value,wilaya:wilaya.value,birth:birth.value,parentsJob:parentsJob.value,familyWealth:familyWealth.value})"><label>Name<input id="name" required value="Ahmed"></label><label>Gender<select id="gender"><option>Male</option><option>Female</option></select></label><label>Wilaya<select id="wilaya">${Object.keys(WILAYAS).map(w=>`<option>${w}</option>`).join("")}</select></label><label>Birth year<input id="birth" type="number" value="2007" min="1950" max="2026"></label><label>Parents' jobs<input id="parentsJob" value="Employee / small business"></label><label>Family wealth (DZD)<input id="familyWealth" type="number" value="1200000" min="0"></label><button class="primary" type="submit">START LIFE</button></form></div></div>`}
+function manualSave(){save();notice("Game saved locally on this device.")}
+function newGame(){if(confirm("Start a new life? The current local save will be replaced.")){localStorage.removeItem("dzlife");S=null;chart=[];render()}}
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+load(); if(S){econ();render()}else renderStart();
+</script>
+</body></html>

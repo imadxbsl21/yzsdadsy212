@@ -1,0 +1,19 @@
+{
+  "name": "dz-life",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DZ LIFE — Algerian Life Simulator",
+  "scripts": {
+    "build:web": "node -e \"console.log('Static web app — no bundler required')\"",
+    "android:add": "npx cap add android",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/core": "8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.2"
+  }
+}
